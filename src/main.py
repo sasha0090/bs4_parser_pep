@@ -17,8 +17,6 @@ def whats_new(session):
     whats_new_url = urljoin(MAIN_DOC_URL, "whatsnew/")
 
     response = get_response(session, whats_new_url)
-    if response is None:
-        return
 
     soup = BeautifulSoup(response.text, "lxml")
 
@@ -32,8 +30,6 @@ def whats_new(session):
         url = urljoin(whats_new_url, version_link.a["href"])
 
         response = get_response(session, url)
-        if response is None:
-            continue
 
         soup = BeautifulSoup(response.text, "lxml")
 
@@ -48,8 +44,6 @@ def whats_new(session):
 
 def latest_versions(session):
     response = get_response(session, MAIN_DOC_URL)
-    if response is None:
-        return
 
     soup = BeautifulSoup(response.text, "lxml")
 
@@ -83,8 +77,6 @@ def download(session):
     downloads_url = urljoin(MAIN_DOC_URL, "download.html")
 
     response = get_response(session, downloads_url)
-    if response is None:
-        return
 
     soup = BeautifulSoup(response.text, "lxml")
     table = find_tag(soup, "table", {"class": "docutils"})
@@ -109,8 +101,6 @@ def download(session):
 
 def get_pep_status(session, url):
     response = get_response(session, url)
-    if response is None:
-        return
 
     soup = BeautifulSoup(response.text, "lxml")
     return soup.find(string="Status").parent.find_next_sibling("dd").text
@@ -118,17 +108,15 @@ def get_pep_status(session, url):
 
 def pep(session):
     response = get_response(session, PEP_URL)
-    if response is None:
-        return
 
     soup = BeautifulSoup(response.text, "lxml")
 
     result = Counter()
 
-    for tbody in soup.find_all("tbody")[:-1]:
+    for tbody in tqdm(soup.find_all("tbody")[:-1]):
         different_statuses = ""
 
-        for tr in tqdm(tbody.find_all("tr")):
+        for tr in tqdm(tbody.find_all("tr"), leave=False):
             tr_status = find_tag(tr, "td").text
             if tr_status:
                 tr_status = tr_status[1:]
@@ -147,7 +135,6 @@ def pep(session):
                     f"Ожидаемые статусы: {EXPECTED_STATUS.get(tr_status)}"
                 )
             result[pep_status] += 1
-
         if different_statuses:
             logging.info(different_statuses)
 
